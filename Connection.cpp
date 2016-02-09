@@ -228,6 +228,8 @@ namespace CFNetwork {
    *
    * Attempts to read data from the Connection
    *
+   * @remarks This method blocks execution until data is read
+   *
    * @return std::string of the data that was read
    */
   std::string Connection::read() const {
