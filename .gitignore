@@ -1,0 +1,9 @@
+*.dSYM
+*.o
+*.o-*
+*.so
+*.zip
+.Makefile-*
+Makefile
+main
+main.cpp
