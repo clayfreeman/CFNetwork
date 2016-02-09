@@ -9,15 +9,15 @@
 
 #include <arpa/inet.h>     // for inet_ntop
 #include <memory>          // for shared_ptr
-#include <netinet/in.h>    // for sockaddr_in, INET_ADDRSTRLEN, s...
-#include <string>          // for allocator, operator+, basic_str...
+#include <netinet/in.h>    // for INET_ADDRSTRLEN, INET6_ADDRSTRLEN, sockadd...
+#include <string>          // for allocator, operator+, basic_string
 #include <sys/errno.h>     // for EBADF, errno
 #include <sys/fcntl.h>     // for fcntl, F_GETFD
-#include <sys/socket.h>    // for sockaddr_storage, AF_INET, bind
+#include <sys/socket.h>    // for sockaddr_storage, AF_INET, AF_INET6, accep...
 #include <unistd.h>        // for close
-#include "CFNetwork.hpp"   // for CFNetwork
+#include "CFNetwork.hpp"   // for SocketFamily, UnexpectedError, SocketFamil...
 #include "Connection.hpp"  // for Connection
-#include "Socket.hpp"      // for Socket, SocketFamily
+#include "Socket.hpp"      // for Socket
 
 namespace CFNetwork {
   /**

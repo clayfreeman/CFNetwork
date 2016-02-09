@@ -8,13 +8,14 @@
  */
 
 #include <arpa/inet.h>     // for inet_ntop
-#include <netinet/in.h>    // for sockaddr_in, INET_ADDRSTRLEN, s...
-#include <string>          // for allocator, operator+, basic_str...
+#include <cstring>         // for memset
+#include <netinet/in.h>    // for INET_ADDRSTRLEN, INET6_ADDRSTRLEN, sockadd...
+#include <string>          // for allocator, basic_string, operator+, to_string
 #include <sys/errno.h>     // for EBADF, errno
-#include <sys/fcntl.h>     // for fcntl, F_GETFD, F_SETFL, O_NONB...
-#include <sys/socket.h>    // for sockaddr_storage, AF_INET, bind
-#include <unistd.h>        // for close
-#include "CFNetwork.hpp"   // for CFNetwork
+#include <sys/fcntl.h>     // for fcntl, F_GETFD
+#include <sys/socket.h>    // for sockaddr_storage, AF_INET, AF_INET6
+#include <unistd.h>        // for close, read, write, ssize_t
+#include "CFNetwork.hpp"   // for InvalidArgument, parseAddress, SocketFamily
 #include "Connection.hpp"  // for Connection
 
 namespace CFNetwork {
@@ -26,7 +27,7 @@ namespace CFNetwork {
    * @param addr The address of the remote endpoint
    * @param port The port of the remote endpoint
    */
-  Connection(const std::string& addr, int port) {
+  Connection::Connection(const std::string& addr, int port) {
     // Set the ConnectionFlow type to Outbound
     this->flow = ConnectionFlow::Outbound;
     // Store the provided connection port

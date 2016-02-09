@@ -11,7 +11,7 @@
 #define _CONNECTION_H
 
 #include <string>         // for string
-#include "CFNetwork.hpp"  // for CFNetwork, ConnectionFlow, SocketFamily
+#include "CFNetwork.hpp"  // for ConnectionFlow, SocketFamily
 
 namespace CFNetwork {
   /**
