@@ -31,7 +31,7 @@ namespace CFNetwork {
   Socket::Socket(const std::string& addr, int port) {
     // Ensure the validity of the provided port
     if (port < 1 || port > 65535)
-      throw InvalidArgument{"Port number out of range."};
+      throw InvalidArgument{"The provided port number is out of range."};
     // Fetch a finalized sockaddr_storage for the given address
     struct sockaddr_storage address  = parseAddress(addr);
     // Create pointers to each expected variety of address family
@@ -59,6 +59,11 @@ namespace CFNetwork {
         addressString, INET6_ADDRSTRLEN);
       // Assign the port to the sockaddr struct
       address6->sin6_port = htons(this->port = port);
+    }
+    else {
+      // Remote address has an unexpected address family
+      throw InvalidArgument{"The remote address has an unexpected address "
+        "family."};
     }
     // Setup the socket using the appropriate address family and type
     this->socket = ::socket(address.ss_family, SOCK_STREAM, 0);

@@ -30,37 +30,54 @@ namespace CFNetwork {
   Connection::Connection(const std::string& addr, int port) {
     // Set the ConnectionFlow type to Outbound
     this->flow = ConnectionFlow::Outbound;
-    // Store the provided connection port
-    this->port = port;
     // Ensure the validity of the provided port
-    if (this->port < 1 || this->port > 65535)
+    if (port < 1 || port > 65535)
       throw InvalidArgument{"The provided port number is out of range."};
-    // Verify the endpoint address and assign it to its instance attribute
-    struct sockaddr_storage address = parseAddress(addr);
+    // Fetch a finalized sockaddr_storage for the given address
+    struct sockaddr_storage address  = parseAddress(addr);
+    // Create pointers to each expected variety of address family
+    struct sockaddr*        address_ =
+      reinterpret_cast<struct sockaddr    *>(&address);
+    struct sockaddr_in*     address4 =
+      reinterpret_cast<struct sockaddr_in *>(&address);
+    struct sockaddr_in6*    address6 =
+      reinterpret_cast<struct sockaddr_in6*>(&address);
+    // Use the appropriate setup helper depending on the address family
     if (address.ss_family == AF_INET) {
       this->family = SocketFamily::IPv4;
-      // Create pointer to the expected variety of address family
-      struct sockaddr_in* address4 =
-        reinterpret_cast<struct sockaddr_in*>(&address);
-      // Fetch the canonicalized remote address
+      // Store a text-based representation of the listen address
       char addressString[INET_ADDRSTRLEN  + 1] = {};
       this->remote = inet_ntop(address.ss_family, &address4->sin_addr,
         addressString, INET_ADDRSTRLEN);
+      // Assign the port to the sockaddr struct
+      address4->sin_port = htons(this->port = port);
     }
     else if (address.ss_family == AF_INET6) {
       this->family = SocketFamily::IPv6;
-      // Create pointer to the expected variety of address family
-      struct sockaddr_in6* address6 =
-        reinterpret_cast<struct sockaddr_in6*>(&address);
-      // Fetch the canonicalized listen address
-      char addressString[INET6_ADDRSTRLEN  + 1] = {};
+      // Store a text-based representation of the listen address
+      char addressString[INET6_ADDRSTRLEN + 1] = {};
       this->remote = inet_ntop(address.ss_family, &address6->sin6_addr,
         addressString, INET6_ADDRSTRLEN);
+      // Assign the port to the sockaddr struct
+      address6->sin6_port = htons(this->port = port);
     }
     else {
       // Remote address has an unexpected address family
       throw InvalidArgument{"The remote address has an unexpected address "
         "family."};
+    }
+    // Setup the socket using the appropriate address family and type
+    this->socket = ::socket(address.ss_family, SOCK_STREAM, 0);
+    { // Allow reusing the socket
+      int reuse = 1;
+      setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)); }
+    // Attempt to connect the socket to the remote address
+    if (connect(this->socket, address_, this->family == SocketFamily::IPv4 ?
+        sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)) < 0) {
+      // A problem occurred, close the socket and throw an exception
+      close(this->socket);
+      throw UnexpectedError{"Couldn't connect to [" + this->remote + "]:" +
+        std::to_string(this->port)};
     }
   }
 
