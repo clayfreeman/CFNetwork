@@ -1,6 +1,6 @@
 /**
  * @file CFNetwork.hpp
- * @copyright Copyright 2016 Clay Freeman.  All rights reserved
+ * @copyright Copyright 2016 Clay Freeman. All rights reserved
  * @license   This project is released under the GNU Lesser General Public
  *            License v3 (LGPL-3.0)
  *

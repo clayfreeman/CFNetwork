@@ -1,6 +1,6 @@
 /**
  * @file Socket.cpp
- * @copyright Copyright 2016 Clay Freeman.  All rights reserved
+ * @copyright Copyright 2016 Clay Freeman. All rights reserved
  * @license   This project is released under the GNU Lesser General Public
  *            License v3 (LGPL-3.0)
  *
@@ -164,7 +164,7 @@ namespace CFNetwork {
    * Fetches the listening address of the associated Socket
    *
    * @remarks This method can produce a std::string of either an IPv4 address
-   * or an IPv6 address.  This method will not produce hostnames
+   * or an IPv6 address. This method will not produce hostnames
    *
    * @return std::string of the listening address
    */

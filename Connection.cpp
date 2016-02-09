@@ -1,6 +1,6 @@
 /**
  * @file Connection.cpp
- * @copyright Copyright 2016 Clay Freeman.  All rights reserved
+ * @copyright Copyright 2016 Clay Freeman. All rights reserved
  * @license   This project is released under the GNU Lesser General Public
  *            License v3 (LGPL-3.0)
  *
@@ -19,6 +19,51 @@
 
 namespace CFNetwork {
   /**
+   * @brief Connection Constructor (outbound)
+   *
+   * Allows for constructing a Connection object to an outbound endpoint
+   *
+   * @param addr The address of the remote endpoint
+   * @param port The port of the remote endpoint
+   */
+  Connection(const std::string& addr, int port) {
+    // Set the ConnectionFlow type to Outbound
+    this->flow = ConnectionFlow::Outbound;
+    // Store the provided connection port
+    this->port = port;
+    // Ensure the validity of the provided port
+    if (this->port < 1 || this->port > 65535)
+      throw InvalidArgument{"The provided port number is out of range."};
+    // Verify the endpoint address and assign it to its instance attribute
+    struct sockaddr_storage address = parseAddress(addr);
+    if (address.ss_family == AF_INET) {
+      this->family = SocketFamily::IPv4;
+      // Create pointer to the expected variety of address family
+      struct sockaddr_in* address4 =
+        reinterpret_cast<struct sockaddr_in*>(&address);
+      // Fetch the canonicalized remote address
+      char addressString[INET_ADDRSTRLEN  + 1] = {};
+      this->remote = inet_ntop(address.ss_family, &address4->sin_addr,
+        addressString, INET_ADDRSTRLEN);
+    }
+    else if (address.ss_family == AF_INET6) {
+      this->family = SocketFamily::IPv6;
+      // Create pointer to the expected variety of address family
+      struct sockaddr_in6* address6 =
+        reinterpret_cast<struct sockaddr_in6*>(&address);
+      // Fetch the canonicalized listen address
+      char addressString[INET6_ADDRSTRLEN  + 1] = {};
+      this->remote = inet_ntop(address.ss_family, &address6->sin6_addr,
+        addressString, INET6_ADDRSTRLEN);
+    }
+    else {
+      // Remote address has an unexpected address family
+      throw InvalidArgument{"The remote address has an unexpected address "
+        "family."};
+    }
+  }
+
+  /**
    * @brief Connection Constructor (inbound)
    *
    * Allows for constructing a Connection object from an inbound client socket
@@ -31,6 +76,8 @@ namespace CFNetwork {
    */
   Connection::Connection(const std::string& laddr, const std::string& raddr,
       int port, int socket) {
+    // Set the ConnectionFlow type to Inbound
+    this->flow = ConnectionFlow::Inbound;
     // Store the provided connection port
     this->port = port;
     // Ensure the validity of the provided port
@@ -41,8 +88,6 @@ namespace CFNetwork {
     // Ensure the validity of the provided socket
     if (!this->valid())
       throw InvalidArgument{"The provided socket file descriptor is invalid."};
-    // Set the ConnectionFlow type to Inbound
-    this->flow = ConnectionFlow::Inbound;
     // Verify both addresses and assign them to their instance attributes
     struct sockaddr_storage laddress = parseAddress(laddr);
     struct sockaddr_storage raddress = parseAddress(raddr);
@@ -83,7 +128,7 @@ namespace CFNetwork {
     else {
       // Listen/remote addresses shouldn't have differing address families
       throw InvalidArgument{"The listen address and remote address have "
-        "differing address families."};
+        "differing or unexpected address families."};
     }
   }
 
@@ -125,8 +170,9 @@ namespace CFNetwork {
    *
    * Fetches the listening address of the associated Connection
    *
-   * @remarks This method can produce a std::string of either an IPv4 address
-   * or an IPv6 address.  This method will not produce hostnames
+   * @remarks This method can produce a std::string of either an IPv4 address,
+   * IPv6 address, or an empty string in context of an outbound flow. This
+   * method will not produce hostnames
    *
    * @return std::string of the listening address
    */
@@ -151,7 +197,7 @@ namespace CFNetwork {
    * Fetches the remote address of the associated Connection
    *
    * @remarks This method can produce a std::string of either an IPv4 address
-   * or an IPv6 address.  This method will not produce hostnames
+   * or an IPv6 address. This method will not produce hostnames
    *
    * @return std::string of the remote address
    */
