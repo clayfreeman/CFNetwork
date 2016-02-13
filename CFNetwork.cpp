@@ -39,10 +39,15 @@ namespace CFNetwork {
     hints.ai_flags  = AI_NUMERICHOST;
 
     // Upon failure to parse or unexpected address family, throw an exception
-    if (getaddrinfo(addr.c_str(), nullptr, &hints, &res) != 0 ||
-        res == nullptr || (res->ai_family != AF_INET &&
-        res->ai_family != AF_INET6))
-      throw InvalidArgument{"Could not parse the provided address."};
+    InvalidArgument ia{"Could not parse the provided address."};
+    if (getaddrinfo(addr.c_str(), nullptr, &hints, &res) != 0 || res == nullptr)
+      throw ia;
+
+    if (res->ai_family != AF_INET && res->ai_family != AF_INET6) {
+      // Free the required storage for getaddrinfo(...)
+      freeaddrinfo(res);
+      throw ia;
+    }
 
     // Copy the first address into the
     memcpy(&address, res->ai_addr, res->ai_addrlen);

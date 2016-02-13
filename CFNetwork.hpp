@@ -12,7 +12,7 @@
 
 #include <stdexcept>     // for runtime_error
 #include <string>        // for string
-#include <sys/socket.h>  // for AF_INET, AF_INET6, sockaddr_storage
+#include <sys/socket.h>  // for AF_INET, AF_INET6, SOCK_DGRAM, SOCK_STREAM, ...
 
 /**
  * @namespace CFNetwork
@@ -82,6 +82,18 @@ namespace CFNetwork {
   enum class SocketFamily {
     IPv4 = AF_INET,
     IPv6 = AF_INET6
+  };
+
+  /**
+   * @enum  SocketType
+   * @brief Used to specify the type of a Socket
+   *
+   * The SocketType enum is responsible for communicating whether a given Socket
+   * object is using TCP or UDP as its transport.
+   */
+  enum class SocketType {
+    TCP = SOCK_STREAM,
+    UDP = SOCK_DGRAM
   };
 }
 

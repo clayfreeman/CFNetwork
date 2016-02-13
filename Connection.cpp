@@ -45,7 +45,7 @@ namespace CFNetwork {
     // Use the appropriate setup helper depending on the address family
     if (address.ss_family == AF_INET) {
       this->family = SocketFamily::IPv4;
-      // Store a text-based representation of the listen address
+      // Store a text-based representation of the remote address
       char addressString[INET_ADDRSTRLEN  + 1] = {};
       this->remote = inet_ntop(address.ss_family, &address4->sin_addr,
         addressString, INET_ADDRSTRLEN);
@@ -54,7 +54,7 @@ namespace CFNetwork {
     }
     else if (address.ss_family == AF_INET6) {
       this->family = SocketFamily::IPv6;
-      // Store a text-based representation of the listen address
+      // Store a text-based representation of the remote address
       char addressString[INET6_ADDRSTRLEN + 1] = {};
       this->remote = inet_ntop(address.ss_family, &address6->sin6_addr,
         addressString, INET6_ADDRSTRLEN);
