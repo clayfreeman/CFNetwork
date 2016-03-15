@@ -44,6 +44,7 @@ namespace CFNetwork {
       Connection(const std::string& laddr, const std::string& raddr,
         int port, int socket);
      ~Connection();
+      int                getDescriptor()                const;
       SocketFamily       getFamily()                    const;
       ConnectionFlow     getFlow()                      const;
       const std::string& getListen()                    const;

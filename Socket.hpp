@@ -39,11 +39,12 @@ namespace CFNetwork {
     public:
       Socket(const std::string& addr, int port);
      ~Socket();
-      std::shared_ptr<Connection> accept()    const;
-      SocketFamily                getFamily() const;
-      const std::string&          getHost()   const;
-      int                         getPort()   const;
-      bool                        valid()     const;
+      std::shared_ptr<Connection> accept()        const;
+      int                         getDescriptor() const;
+      SocketFamily                getFamily()     const;
+      const std::string&          getHost()       const;
+      int                         getPort()       const;
+      bool                        valid()         const;
   };
 }
 

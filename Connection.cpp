@@ -162,6 +162,17 @@ namespace CFNetwork {
   }
 
   /**
+   * @brief Get Descriptor
+   *
+   * Fetches the file descriptor of the associated Connection
+   *
+   * @return An integer value of the file descriptor
+   */
+  int Connection::getDescriptor() const {
+    return this->socket;
+  }
+
+  /**
    * @brief Get Family
    *
    * Fetches the address family of the associated Connection
