@@ -4,6 +4,9 @@
 *.so
 *.zip
 .Makefile-*
+Doxyfile
+html
+latex
 Makefile
 main
 main.cpp

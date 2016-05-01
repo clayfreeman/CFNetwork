@@ -19,7 +19,7 @@ namespace CFNetwork {
    *
    * The `Connection` object is responsible for communication between two
    * network endpoints. The object can be setup by accepting an incoming
-   * connection on a `CFNetwork::Socket` object, or by explicitly making an
+   * connection on a `Socket` object, or by explicitly making an
    * outgoing connection to a given address and port
    *
    * The `Connection` object is not copyable or assignable since it contains
@@ -31,11 +31,36 @@ namespace CFNetwork {
       Connection& operator= (const Connection&);
 
     protected:
+      /**
+       * @var family
+       * Used to describe the socket family type of a `Connection`
+       */
       SocketFamily   family = SocketFamily::IPv4;
+      /**
+       * @var flow
+       * Used to describe the connection flow direction of a `Connection`
+       */
       ConnectionFlow flow   = ConnectionFlow::Inbound;
+      /**
+       * @var listen
+       * Holds the listening address associated with an inbound `Connection`
+       */
       std::string    listen = "";
+      /**
+       * @var port
+       * Holds the listening port for an inbound `Connection` or the outbound
+       * port for an outbound `Connection`
+       */
       int            port   = 0;
+      /**
+       * @var remote
+       * Holds the remote address of a `Connection`
+       */
       std::string    remote = "0.0.0.0";
+      /**
+       * @var socket
+       * Holds the file descriptor associated with a `Connection`
+       */
       int            socket = -1;
 
     public:

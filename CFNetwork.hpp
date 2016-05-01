@@ -55,7 +55,7 @@ namespace CFNetwork {
    * @enum ConnectionFlow
    * The `ConnectionFlow` enum is responsible for communicating whether or not a
    * given `Connection` is setup for outbound connectivity or was received
-   * inbound from a `CFNetwork::Socket` object
+   * inbound from a `Socket` object
    */
   enum class ConnectionFlow {
     /**
@@ -88,15 +88,15 @@ namespace CFNetwork {
     IPv6 = AF_INET6
   };
 
-  /**
-   * @enum SocketType
-   * The `SocketType` enum is responsible for communicating whether a given
-   * `Socket` object is using TCP or UDP as its transport.
-   */
-  enum class SocketType {
-    TCP = SOCK_STREAM,
-    UDP = SOCK_DGRAM
-  };
+  // /**
+  //  * @enum SocketType
+  //  * The `SocketType` enum is responsible for communicating whether a given
+  //  * `Socket` object is using TCP or UDP as its transport.
+  //  */
+  // enum class SocketType {
+  //   TCP = SOCK_STREAM,
+  //   UDP = SOCK_DGRAM
+  // };
 }
 
 #endif

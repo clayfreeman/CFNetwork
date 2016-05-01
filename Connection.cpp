@@ -175,7 +175,7 @@ namespace CFNetwork {
   /**
    * Fetches the address family of the `Connection` instance
    *
-   * @see    CFNetwork::SocketFamily for more information on socket families
+   * @see    SocketFamily for more information on socket families
    *
    * @return `SocketFamily` value describing the address family
    */
@@ -186,7 +186,7 @@ namespace CFNetwork {
   /**
    * Fetches the flow type of the `Connection` instance
    *
-   * @see    CFNetwork::ConnectionFlow for more information on flow types
+   * @see    ConnectionFlow for more information on flow types
    *
    * @return `ConnectionFlow` value describing the flow type
    */
@@ -241,8 +241,8 @@ namespace CFNetwork {
    * `MAX_BYTES - 1`. If there were zero bytes read then the `Connection` will
    * be invalidated due to being reset by the remote peer
    *
-   * @throws `CFNetwork::InvalidArgument` if the `Connection` is invalid
-   * @throws `CFNetwork::UnexpectedError` if the `Connection` was reset by peer
+   * @throws `InvalidArgument` if the `Connection` is invalid
+   * @throws `UnexpectedError` if the `Connection` was reset by peer
    *
    * @return `std::string` containing the data that was read
    */
@@ -298,7 +298,7 @@ namespace CFNetwork {
    * default, however this can be avoided using the appropriate parameter for
    * this method.
    *
-   * @throws `CFNetwork::InvalidArgument` if the internal file descriptor is
+   * @throws `InvalidArgument` if the internal file descriptor is
    *         considered invalid
    *
    * @param  data    `std::string` containing the contents to write

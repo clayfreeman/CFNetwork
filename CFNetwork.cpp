@@ -23,8 +23,8 @@ namespace CFNetwork {
    *   - `struct sockaddr_in`
    *   - `struct sockaddr_in6`
    *
-   * @throws `CFNetwork::InvalidArgument` on failure or when an unexpected
-   *         address family is encountered
+   * @throws `InvalidArgument` on failure or when an unexpected address family
+   *         is encountered
    *
    * @return `struct sockaddr_storage` containing the relevant information
    */

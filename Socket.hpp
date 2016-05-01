@@ -30,9 +30,25 @@ namespace CFNetwork {
       Socket& operator= (const Socket&);
 
     protected:
+      /**
+       * @var family
+       * Used to describe the socket family type of a `Socket`
+       */
       SocketFamily family = SocketFamily::IPv4;
+      /**
+       * @var host
+       * Holds the listening address associated with a `Socket`
+       */
       std::string  host   = "0.0.0.0";
+      /**
+       * @var port
+       * Holds the listening port associated with a `Socket`
+       */
       int          port   =  0;
+      /**
+       * @var socket
+       * Holds the file descriptor associated with a `Socket`
+       */
       int          socket = -1;
 
     public:

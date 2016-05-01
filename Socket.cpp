@@ -165,7 +165,7 @@ namespace CFNetwork {
   /**
    * Fetches the address family of the `Socket` instance
    *
-   * @see    CFNetwork::SocketFamily for more information on socket families
+   * @see    SocketFamily for more information on socket families
    *
    * @return `SocketFamily` value describing the address family
    */
