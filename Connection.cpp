@@ -1,10 +1,9 @@
 /**
- * @file Connection.cpp
+ * @file      Connection.cpp
  * @copyright Copyright 2016 Clay Freeman. All rights reserved
- * @license   This project is released under the GNU Lesser General Public
- *            License v3 (LGPL-3.0)
+ * @license   GNU Lesser General Public License v3 (LGPL-3.0)
  *
- * Implementation source for the Connection object
+ * Implementation source for the `Connection` object
  */
 
 #include <arpa/inet.h>     // for inet_ntop
@@ -20,9 +19,9 @@
 
 namespace CFNetwork {
   /**
-   * @brief Connection Constructor (outbound)
+   * `Connection` Constructor (outbound)
    *
-   * Allows for constructing a Connection object to an outbound endpoint
+   * Allows for constructing a `Connection` object to an outbound endpoint
    *
    * @param addr The address of the remote endpoint
    * @param port The port of the remote endpoint
@@ -82,14 +81,14 @@ namespace CFNetwork {
   }
 
   /**
-   * @brief Connection Constructor (inbound)
+   * `Connection` Constructor (inbound)
    *
-   * Allows for constructing a Connection object from an inbound client socket
-   * that was accepted by a listening socket
+   * Allows for constructing a `Connection` object from an inbound client file
+   * descriptor that was accepted by a listening socket
    *
    * @param laddr  The address of the local listening socket
    * @param raddr  The address of the remote client
-   * @param port   The port of the listening socket that received the connection
+   * @param port   The port of the listening socket that received the client
    * @param socket The file descriptor for the client
    */
   Connection::Connection(const std::string& laddr, const std::string& raddr,
@@ -151,10 +150,10 @@ namespace CFNetwork {
   }
 
   /**
-   * @brief Connection Destructor
+   * `Connection` Destructor
    *
-   * Upon destruction of a Connection object, close its associated file
-   * descriptor
+   * Upon destruction of a `Connection` object, close its associated file
+   * descriptor (if still valid)
    */
   Connection::~Connection() {
     if (this->valid())
@@ -162,86 +161,90 @@ namespace CFNetwork {
   }
 
   /**
-   * @brief Get Descriptor
+   * Fetches the file descriptor of the `Connection` instance
    *
-   * Fetches the file descriptor of the associated Connection
+   * The internal file descriptor can be used to perform more advanced actions
+   * that this class doesn't accommodate for
    *
-   * @return An integer value of the file descriptor
+   * @return `int` representing a file descriptor
    */
   int Connection::getDescriptor() const {
     return this->socket;
   }
 
   /**
-   * @brief Get Family
+   * Fetches the address family of the `Connection` instance
    *
-   * Fetches the address family of the associated Connection
+   * @see    CFNetwork::SocketFamily for more information on socket families
    *
-   * @return A SocketFamily value describing the address family
+   * @return `SocketFamily` value describing the address family
    */
   SocketFamily Connection::getFamily() const {
     return this->family;
   }
 
   /**
-   * @brief Get Flow
+   * Fetches the flow type of the `Connection` instance
    *
-   * Fetches the flow type of the associated Connection
+   * @see    CFNetwork::ConnectionFlow for more information on flow types
    *
-   * @return A ConnectionFlow value describing the flow type
+   * @return `ConnectionFlow` value describing the flow type
    */
   ConnectionFlow Connection::getFlow() const {
     return this->flow;
   }
 
   /**
-   * @brief Get Listen
+   * Fetches the listening address of the `Connection` instance
    *
-   * Fetches the listening address of the associated Connection
+   * This method will produce a `std::string` of an IPv4/IPv6 address only (no
+   * IP addresses will be reverse resolved into hostnames)
    *
-   * @remarks This method can produce a std::string of either an IPv4 address,
-   * IPv6 address, or an empty string in context of an outbound flow. This
-   * method will not produce hostnames
+   * In the context of an outbound `Connection`, the resulting value will be an
+   * empty `std::string`
    *
-   * @return std::string of the listening address
+   * @return `std::string` containing the listening address
    */
   const std::string& Connection::getListen() const {
     return this->listen;
   }
 
   /**
-   * @brief Get Port
+   * Fetches the port of the `Connection` instance
    *
-   * Fetches the listening port of the associated Socket
+   * If the `Connection` represents an inbound client, the port will be that of
+   * the originating `Socket` listening port. For outbound connections, the port
+   * will be the original value provided during construction
    *
-   * @return int of the listening port
+   * @return `int` representing the port
    */
   int Connection::getPort() const {
     return this->port;
   }
 
   /**
-   * @brief Get Remote
+   * Fetches the remote address of the `Connection` instance
    *
-   * Fetches the remote address of the associated Connection
+   * This method will produce a `std::string` of an IPv4/IPv6 address only (no
+   * IP addresses will be reverse resolved into hostnames)
    *
-   * @remarks This method can produce a std::string of either an IPv4 address
-   * or an IPv6 address. This method will not produce hostnames
-   *
-   * @return std::string of the remote address
+   * @return `std::string` containing the remote peer's IP address
    */
   const std::string& Connection::getRemote() const {
     return this->remote;
   }
 
   /**
-   * @brief Read
+   * Attempts to read data from the internal file descriptor
    *
-   * Attempts to read data from the Connection
+   * Performs a blocking read on the internal file descriptor up to
+   * `MAX_BYTES - 1`. If there were zero bytes read then the `Connection` will
+   * be invalidated due to being reset by the remote peer
    *
-   * @remarks This method blocks execution until data is read
+   * @throws `CFNetwork::InvalidArgument` if the `Connection` is invalid
+   * @throws `CFNetwork::UnexpectedError` if the `Connection` was reset by peer
    *
-   * @return std::string of the data that was read
+   * @return `std::string` containing the data that was read
    */
   std::string Connection::read() const {
     // Prepare storage for the return value
@@ -272,23 +275,34 @@ namespace CFNetwork {
   }
 
   /**
-   * @brief Valid
+   * Determines if the file descriptor is considered valid for read, write, or
+   * any other operations
    *
-   * Determines if the associated Socket has a valid file descriptor
+   * A file descriptor is considered invalid if a call requesting its flags
+   * fails with the return value of `-1` or `errno` is set to `EBADF` (the
+   * provided argument is not an open file descriptor). If neither case is
+   * satisfied, the file descriptor is considered valid
    *
-   * @return true if valid, false otherwise
+   * @see    fcntl() For more information regarding this procedure's test
+   *
+   * @return `true` if the file descriptor is valid, `false` otherwise
    */
   bool Connection::valid() const {
     return (fcntl(this->socket, F_GETFD) != -1 || errno != EBADF);
   }
 
   /**
-   * @brief Write
+   * Attempts to write the provided data to the internal file descriptor
    *
-   * Attempts to write data to the Connection
+   * An optional newline character is inserted into the provided data by
+   * default, however this can be avoided using the appropriate parameter for
+   * this method.
    *
-   * @param data    std::string containing the contents to write
-   * @param newline Whether or not a newline character should be included
+   * @throws `CFNetwork::InvalidArgument` if the internal file descriptor is
+   *         considered invalid
+   *
+   * @param  data    `std::string` containing the contents to write
+   * @param  newline Whether or not a newline character should be included
    */
   void Connection::write(std::string data, bool newline) const {
     if (newline) data += "\n";

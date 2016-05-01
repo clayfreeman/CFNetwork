@@ -1,10 +1,9 @@
 /**
- * @file Socket.cpp
+ * @file      Socket.cpp
  * @copyright Copyright 2016 Clay Freeman. All rights reserved
- * @license   This project is released under the GNU Lesser General Public
- *            License v3 (LGPL-3.0)
+ * @license   GNU Lesser General Public License v3 (LGPL-3.0)
  *
- * Implementation source for the Socket object
+ * Implementation source for the `Socket` object
  */
 
 #include <arpa/inet.h>     // for inet_ntop
@@ -21,12 +20,13 @@
 
 namespace CFNetwork {
   /**
-   * @brief Socket Constructor
+   * `Socket` Constructor
    *
-   * Constructs a Socket object given a listening address/port
+   * Constructs a `Socket` object given a listening address/port and begins
+   * listening for clients
    *
-   * @param addr std::string object containing the listen address
-   * @param port int containing the port number to listen on
+   * @param addr `std::string` object containing the listen address
+   * @param port `int` containing the port number to listen on
    */
   Socket::Socket(const std::string& addr, int port) {
     // Ensure the validity of the provided port
@@ -85,9 +85,9 @@ namespace CFNetwork {
   }
 
   /**
-   * @brief Socket Destructor
+   * `Socket` Destructor
    *
-   * Upon destruction of a Socket object, close its associated file descriptor
+   * Upon destruction of a `Socket` object, close its associated file descriptor
    */
   Socket::~Socket() {
     if (this->valid())
@@ -95,13 +95,11 @@ namespace CFNetwork {
   }
 
   /**
-   * @brief Accept
+   * Accepts an incoming client and creates a `Connection` object for it
    *
-   * Accepts an incoming client and creates a Connection object for it
+   * This method blocks execution until a client is accepted
    *
-   * @remarks This method blocks execution until a client is accepted
-   *
-   * @return A Connection object for the accepted client
+   * @return `Connection` object representing the accepted client
    */
   std::shared_ptr<Connection> Socket::accept() const {
     // Create storage to accept and capture the client's remote address
@@ -153,58 +151,63 @@ namespace CFNetwork {
   }
 
   /**
-   * @brief Get Descriptor
+   * Fetches the file descriptor of the `Socket` instance
    *
-   * Fetches the file descriptor of the associated Socket
+   * The internal file descriptor can be used to perform more advanced actions
+   * that this class doesn't accommodate for
    *
-   * @return An integer value of the file descriptor
+   * @return `int` representing a file descriptor
    */
   int Socket::getDescriptor() const {
     return this->socket;
   }
 
   /**
-   * @brief Get Family
+   * Fetches the address family of the `Socket` instance
    *
-   * Fetches the address family of the associated Socket
+   * @see    CFNetwork::SocketFamily for more information on socket families
    *
-   * @return A SocketFamily value describing the address family
+   * @return `SocketFamily` value describing the address family
    */
   SocketFamily Socket::getFamily() const {
     return this->family;
   }
 
   /**
-   * @brief Get Host
+   * Fetches the listening address of the associated `Socket`
    *
-   * Fetches the listening address of the associated Socket
+   * This method can produce a `std::string` of either an IPv4 address or an
+   * IPv6 address. This method will not produce hostnames
    *
-   * @remarks This method can produce a std::string of either an IPv4 address
-   * or an IPv6 address. This method will not produce hostnames
-   *
-   * @return std::string of the listening address
+   * @return `std::string` of the listening address
    */
   const std::string& Socket::getHost() const {
     return this->host;
   }
 
   /**
-   * @brief Get Port
+   * Fetches the port of the `Socket` instance
    *
-   * Fetches the listening port of the associated Socket
+   * The port should represent the value that the `Socket` was constructed with
    *
-   * @return int of the listening port
+   * @return `int` representing the port
    */
   int Socket::getPort() const {
     return this->port;
   }
 
   /**
-   * @brief Valid
+   * Determines if the file descriptor is considered valid for read, write, or
+   * any other operations
    *
-   * Determines if the associated Socket has a valid file descriptor
+   * A file descriptor is considered invalid if a call requesting its flags
+   * fails with the return value of `-1` or `errno` is set to `EBADF` (the
+   * provided argument is not an open file descriptor). If neither case is
+   * satisfied, the file descriptor is considered valid
    *
-   * @return true if valid, false otherwise
+   * @see    fcntl() For more information regarding this procedure's test
+   *
+   * @return `true` if the file descriptor is valid, `false` otherwise
    */
   bool Socket::valid() const {
     return (fcntl(this->socket, F_GETFD) != -1 || errno != EBADF);

@@ -1,10 +1,9 @@
 /**
- * @file Socket.hpp
+ * @file      Socket.hpp
  * @copyright Copyright 2016 Clay Freeman. All rights reserved
- * @license   This project is released under the GNU Lesser General Public
- *            License v3 (LGPL-3.0)
+ * @license   GNU Lesser General Public License v3 (LGPL-3.0)
  *
- * Implementation reference for the Socket object
+ * Implementation reference for the `Socket` object
  */
 
 #ifndef _SOCKET_H
@@ -17,12 +16,12 @@
 namespace CFNetwork {
   /**
    * @class Socket
-   * @brief An object-oriented encapsulation for sockets
+   * An object-oriented encapsulation for sockets
    *
-   * The Socket object is responsible for preparations in order to ultimately
+   * The `Socket` object is responsible for preparations in order to ultimately
    * accept connections on a given listening address and port number
    *
-   * @remarks The Socket object is not copyable or assignable since it contains
+   * The `Socket` object is not copyable or assignable since it contains
    * resources that do not lend themselves well to duplication
    */
   class Socket {

@@ -1,10 +1,9 @@
 /**
- * @file CFNetwork.cpp
+ * @file      CFNetwork.cpp
  * @copyright Copyright 2016 Clay Freeman. All rights reserved
- * @license   This project is released under the GNU Lesser General Public
- *            License v3 (LGPL-3.0)
+ * @license   GNU Lesser General Public License v3 (LGPL-3.0)
  *
- * Implementation source for the CFNetwork helper functions
+ * Implementation source for the `CFNetwork` helper functions
  */
 
 #include <cstring>        // for memcpy
@@ -15,19 +14,17 @@
 
 namespace CFNetwork {
   /**
-   * @brief Parse Address
+   * Dynamically parse a `std::string` into a `sockaddr_storage` structure that
+   * is capable of being used in socket operations
    *
-   * Dynamically parse a std::string into a sockaddr_storage structure capable
-   * of being used in socket operations
-   *
-   * @remarks The `struct sockaddr_storage` can be reinterpret cast into any of
-   * the following structures (after checking the ss_family attribute):
+   * The `struct sockaddr_storage` can be reinterpret cast into any of the
+   * following structures (after checking the `ss_family` attribute):
    *   - `struct sockaddr`
    *   - `struct sockaddr_in`
    *   - `struct sockaddr_in6`
    *
    * @throws `CFNetwork::InvalidArgument` on failure or when an unexpected
-   * address family is encountered
+   *         address family is encountered
    *
    * @return `struct sockaddr_storage` containing the relevant information
    */

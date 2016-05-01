@@ -1,10 +1,9 @@
 /**
- * @file Connection.hpp
+ * @file      Connection.hpp
  * @copyright Copyright 2016 Clay Freeman. All rights reserved
- * @license   This project is released under the GNU Lesser General Public
- *            License v3 (LGPL-3.0)
+ * @license   GNU Lesser General Public License v3 (LGPL-3.0)
  *
- * Implementation reference for the Connection object
+ * Implementation reference for the `Connection` object
  */
 
 #ifndef _CONNECTION_H
@@ -16,15 +15,15 @@
 namespace CFNetwork {
   /**
    * @class Connection
-   * @brief An object-oriented encapsulation for network connections
+   * An object-oriented encapsulation for network connections
    *
-   * The Connection object is responsible for communication between two network
-   * endpoints. The object can be setup by accepting an incoming connection on a
-   * CFNetwork::Socket object, or by explicitly connecting to a given address
-   * and port combination
+   * The `Connection` object is responsible for communication between two
+   * network endpoints. The object can be setup by accepting an incoming
+   * connection on a `CFNetwork::Socket` object, or by explicitly making an
+   * outgoing connection to a given address and port
    *
-   * @remarks The Connection object is not copyable or assignable since it
-   * contains resources that do not lend themselves well to duplication
+   * The `Connection` object is not copyable or assignable since it contains
+   * resources that do not lend themselves well to duplication
    */
   class Connection {
     private:
