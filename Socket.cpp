@@ -166,7 +166,7 @@ namespace CFNetwork {
   /**
    * Fetches the address family of the `Socket` instance.
    *
-   * @see    SocketFamily for more information on socket families.
+   * @see    `SocketFamily` for more information on socket families.
    *
    * @return `SocketFamily` value describing the address family.
    */
@@ -206,7 +206,7 @@ namespace CFNetwork {
    * provided argument is not an open file descriptor). If neither case is
    * satisfied, the file descriptor is considered valid.
    *
-   * @see    fcntl() For more information regarding this procedure's test.
+   * @see    `fcntl()` For more information regarding this procedure's test.
    *
    * @return `true` if the file descriptor is valid, `false` otherwise.
    */
