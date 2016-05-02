@@ -3,7 +3,7 @@
  * @copyright Copyright 2016 Clay Freeman. All rights reserved
  * @license   GNU Lesser General Public License v3 (LGPL-3.0)
  *
- * Forward declaration of the `CFNetwork` namespace and related items
+ * Forward declaration of the `CFNetwork` namespace and related items.
  */
 
 #ifndef _CFNETWORK_H
@@ -16,7 +16,7 @@
 /**
  * @namespace CFNetwork
  * `CFNetwork` is a collection of utilities that simplifies the process of
- * developing an application that will make use of the network
+ * developing an application that will make use of the network.
  */
 namespace CFNetwork {
   // Provide forward declaration of classes provided by this namespace
@@ -29,8 +29,9 @@ namespace CFNetwork {
   /**
    * @class InvalidArgument
    * The `InvalidArgument` exception can be thrown by methods in the `CFNetwork`
-   * namespace when an invalid argument is provided. This is a non-critical
-   * exception, and can safely be caught.
+   * namespace when an invalid argument is provided.
+   *
+   * This is a non-critical exception, and can safely be caught.
    */
   class InvalidArgument : public std::runtime_error {
     using std::runtime_error::runtime_error; };
@@ -38,8 +39,9 @@ namespace CFNetwork {
   /**
    * @class UnexpectedError
    * The `UnexpectedError` exception can be thrown by methods in the `CFNetwork`
-   * namespace when an unexpected error is encountered. This is a non-critical
-   * exception, and can safely be caught
+   * namespace when an unexpected error is encountered.
+   *
+   * This is a non-critical exception, and can safely be caught.
    */
   class UnexpectedError : public std::runtime_error {
     using std::runtime_error::runtime_error; };
@@ -47,7 +49,7 @@ namespace CFNetwork {
   /**
    * @var MAX_BYTES
    * The maximum number of bytes that should be contained within all buffers in
-   * this namespace's classes
+   * this namespace's classes.
    */
   const int MAX_BYTES = 8192;
 
@@ -55,17 +57,17 @@ namespace CFNetwork {
    * @enum ConnectionFlow
    * The `ConnectionFlow` enum is responsible for communicating whether or not a
    * given `Connection` is setup for outbound connectivity or was received
-   * inbound from a `Socket` object
+   * inbound from a `Socket` object.
    */
   enum class ConnectionFlow {
     /**
      * @var Inbound
-     * Represents an inbound `Connection`
+     * Represents an inbound `Connection`.
      */
     Inbound,
     /**
      * @var Outbound
-     * Represents an outbound `Connection`
+     * Represents an outbound `Connection`.
      */
     Outbound
   };
@@ -73,22 +75,22 @@ namespace CFNetwork {
   /**
    * @enum SocketFamily
    * The `SocketFamily` enum is responsible for communicating which address
-   * family that a `Socket` object is using
+   * family that a `Socket` object is using.
    */
   enum class SocketFamily {
     /**
      * @var IPv4
-     * Refers to the `AF_INET` socket family
+     * Refers to the `AF_INET` socket family.
      */
     IPv4 = AF_INET,
     /**
      * @var IPv6
-     * Refers to the `AF_INET6` socket family
+     * Refers to the `AF_INET6` socket family.
      */
     IPv6 = AF_INET6
   };
 
-  // /**
+  // /*
   //  * @enum SocketType
   //  * The `SocketType` enum is responsible for communicating whether a given
   //  * `Socket` object is using TCP or UDP as its transport.

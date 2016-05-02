@@ -3,7 +3,7 @@
  * @copyright Copyright 2016 Clay Freeman. All rights reserved
  * @license   GNU Lesser General Public License v3 (LGPL-3.0)
  *
- * Implementation source for the `CFNetwork` helper functions
+ * Implementation source for the `CFNetwork` helper functions.
  */
 
 #include <cstring>        // for memcpy
@@ -15,7 +15,7 @@
 namespace CFNetwork {
   /**
    * Dynamically parse a `std::string` into a `sockaddr_storage` structure that
-   * is capable of being used in socket operations
+   * is capable of being used in socket operations.
    *
    * The `struct sockaddr_storage` can be reinterpret cast into any of the
    * following structures (after checking the `ss_family` attribute):
@@ -24,9 +24,9 @@ namespace CFNetwork {
    *   - `struct sockaddr_in6`
    *
    * @throws `InvalidArgument` on failure or when an unexpected address family
-   *         is encountered
+   *         is encountered.
    *
-   * @return `struct sockaddr_storage` containing the relevant information
+   * @return `struct sockaddr_storage` containing the relevant information.
    */
   struct sockaddr_storage parseAddress(const std::string& addr) {
     // Declare storage for the results

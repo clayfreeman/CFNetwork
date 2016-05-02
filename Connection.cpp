@@ -3,7 +3,7 @@
  * @copyright Copyright 2016 Clay Freeman. All rights reserved
  * @license   GNU Lesser General Public License v3 (LGPL-3.0)
  *
- * Implementation source for the `Connection` object
+ * Implementation source for the `Connection` object.
  */
 
 #include <arpa/inet.h>     // for inet_ntop
@@ -19,9 +19,9 @@
 
 namespace CFNetwork {
   /**
-   * `Connection` Constructor (outbound)
+   * `Connection` Constructor (outbound).
    *
-   * Allows for constructing a `Connection` object to an outbound endpoint
+   * Allows for constructing a `Connection` object to an outbound endpoint.
    *
    * @param addr The address of the remote endpoint
    * @param port The port of the remote endpoint
@@ -81,10 +81,10 @@ namespace CFNetwork {
   }
 
   /**
-   * `Connection` Constructor (inbound)
+   * `Connection` Constructor (inbound).
    *
    * Allows for constructing a `Connection` object from an inbound client file
-   * descriptor that was accepted by a listening socket
+   * descriptor that was accepted by a listening socket.
    *
    * @param laddr  The address of the local listening socket
    * @param raddr  The address of the remote client
@@ -150,10 +150,10 @@ namespace CFNetwork {
   }
 
   /**
-   * `Connection` Destructor
+   * `Connection` Destructor.
    *
    * Upon destruction of a `Connection` object, close its associated file
-   * descriptor (if still valid)
+   * descriptor (if still valid).
    */
   Connection::~Connection() {
     if (this->valid())
@@ -161,90 +161,90 @@ namespace CFNetwork {
   }
 
   /**
-   * Fetches the file descriptor of the `Connection` instance
+   * Fetches the file descriptor of the `Connection` instance.
    *
    * The internal file descriptor can be used to perform more advanced actions
-   * that this class doesn't accommodate for
+   * that this class doesn't accommodate for.
    *
-   * @return `int` representing a file descriptor
+   * @return `int` representing a file descriptor.
    */
   int Connection::getDescriptor() const {
     return this->socket;
   }
 
   /**
-   * Fetches the address family of the `Connection` instance
+   * Fetches the address family of the `Connection` instance.
    *
-   * @see    SocketFamily for more information on socket families
+   * @see    SocketFamily for more information on socket families.
    *
-   * @return `SocketFamily` value describing the address family
+   * @return `SocketFamily` value describing the address family.
    */
   SocketFamily Connection::getFamily() const {
     return this->family;
   }
 
   /**
-   * Fetches the flow type of the `Connection` instance
+   * Fetches the flow type of the `Connection` instance.
    *
-   * @see    ConnectionFlow for more information on flow types
+   * @see    ConnectionFlow for more information on flow types.
    *
-   * @return `ConnectionFlow` value describing the flow type
+   * @return `ConnectionFlow` value describing the flow type.
    */
   ConnectionFlow Connection::getFlow() const {
     return this->flow;
   }
 
   /**
-   * Fetches the listening address of the `Connection` instance
+   * Fetches the listening address of the `Connection` instance.
    *
    * This method will produce a `std::string` of an IPv4/IPv6 address only (no
-   * IP addresses will be reverse resolved into hostnames)
+   * IP addresses will be reverse resolved into hostnames).
    *
    * In the context of an outbound `Connection`, the resulting value will be an
-   * empty `std::string`
+   * empty `std::string`.
    *
-   * @return `std::string` containing the listening address
+   * @return `std::string` containing the listening address.
    */
   const std::string& Connection::getListen() const {
     return this->listen;
   }
 
   /**
-   * Fetches the port of the `Connection` instance
+   * Fetches the port of the `Connection` instance.
    *
    * If the `Connection` represents an inbound client, the port will be that of
    * the originating `Socket` listening port. For outbound connections, the port
-   * will be the original value provided during construction
+   * will be the original value provided during construction.
    *
-   * @return `int` representing the port
+   * @return `int` representing the port.
    */
   int Connection::getPort() const {
     return this->port;
   }
 
   /**
-   * Fetches the remote address of the `Connection` instance
+   * Fetches the remote address of the `Connection` instance.
    *
    * This method will produce a `std::string` of an IPv4/IPv6 address only (no
-   * IP addresses will be reverse resolved into hostnames)
+   * IP addresses will be reverse resolved into hostnames).
    *
-   * @return `std::string` containing the remote peer's IP address
+   * @return `std::string` containing the remote peer's IP address.
    */
   const std::string& Connection::getRemote() const {
     return this->remote;
   }
 
   /**
-   * Attempts to read data from the internal file descriptor
+   * Attempts to read data from the internal file descriptor.
    *
    * Performs a blocking read on the internal file descriptor up to
    * `MAX_BYTES - 1`. If there were zero bytes read then the `Connection` will
-   * be invalidated due to being reset by the remote peer
+   * be invalidated due to being reset by the remote peer.
    *
-   * @throws `InvalidArgument` if the `Connection` is invalid
-   * @throws `UnexpectedError` if the `Connection` was reset by peer
+   * @throws `InvalidArgument` if the `Connection` is invalid.
+   * @throws `UnexpectedError` if the `Connection` was reset by peer.
    *
-   * @return `std::string` containing the data that was read
+   * @return `std::string` containing the data that was read.
    */
   std::string Connection::read() const {
     // Prepare storage for the return value
@@ -276,30 +276,30 @@ namespace CFNetwork {
 
   /**
    * Determines if the file descriptor is considered valid for read, write, or
-   * any other operations
+   * any other operations.
    *
    * A file descriptor is considered invalid if a call requesting its flags
    * fails with the return value of `-1` or `errno` is set to `EBADF` (the
    * provided argument is not an open file descriptor). If neither case is
-   * satisfied, the file descriptor is considered valid
+   * satisfied, the file descriptor is considered valid.
    *
-   * @see    fcntl() For more information regarding this procedure's test
+   * @see    fcntl() For more information regarding this procedure's test.
    *
-   * @return `true` if the file descriptor is valid, `false` otherwise
+   * @return `true` if the file descriptor is valid, `false` otherwise.
    */
   bool Connection::valid() const {
     return (fcntl(this->socket, F_GETFD) != -1 || errno != EBADF);
   }
 
   /**
-   * Attempts to write the provided data to the internal file descriptor
+   * Attempts to write the provided data to the internal file descriptor.
    *
    * An optional newline character is inserted into the provided data by
    * default, however this can be avoided using the appropriate parameter for
    * this method.
    *
    * @throws `InvalidArgument` if the internal file descriptor is
-   *         considered invalid
+   *         considered invalid.
    *
    * @param  data    `std::string` containing the contents to write
    * @param  newline Whether or not a newline character should be included

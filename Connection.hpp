@@ -3,7 +3,7 @@
  * @copyright Copyright 2016 Clay Freeman. All rights reserved
  * @license   GNU Lesser General Public License v3 (LGPL-3.0)
  *
- * Implementation reference for the `Connection` object
+ * Implementation reference for the `Connection` object.
  */
 
 #ifndef _CONNECTION_H
@@ -15,15 +15,15 @@
 namespace CFNetwork {
   /**
    * @class Connection
-   * An object-oriented encapsulation for network connections
+   * An object-oriented encapsulation for network connections.
    *
    * The `Connection` object is responsible for communication between two
    * network endpoints. The object can be setup by accepting an incoming
    * connection on a `Socket` object, or by explicitly making an
-   * outgoing connection to a given address and port
+   * outgoing connection to a given address and port.
    *
    * The `Connection` object is not copyable or assignable since it contains
-   * resources that do not lend themselves well to duplication
+   * resources that do not lend themselves well to duplication.
    */
   class Connection {
     private:
@@ -33,33 +33,33 @@ namespace CFNetwork {
     protected:
       /**
        * @var family
-       * Used to describe the socket family type of a `Connection`
+       * Used to describe the socket family type of a `Connection`.
        */
       SocketFamily   family = SocketFamily::IPv4;
       /**
        * @var flow
-       * Used to describe the connection flow direction of a `Connection`
+       * Used to describe the connection flow direction of a `Connection`.
        */
       ConnectionFlow flow   = ConnectionFlow::Inbound;
       /**
        * @var listen
-       * Holds the listening address associated with an inbound `Connection`
+       * Holds the listening address associated with an inbound `Connection`.
        */
       std::string    listen = "";
       /**
        * @var port
        * Holds the listening port for an inbound `Connection` or the outbound
-       * port for an outbound `Connection`
+       * port for an outbound `Connection`.
        */
       int            port   = 0;
       /**
        * @var remote
-       * Holds the remote address of a `Connection`
+       * Holds the remote address of a `Connection`.
        */
       std::string    remote = "0.0.0.0";
       /**
        * @var socket
-       * Holds the file descriptor associated with a `Connection`
+       * Holds the file descriptor associated with a `Connection`.
        */
       int            socket = -1;
 
