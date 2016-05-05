@@ -6,8 +6,8 @@
  * Implementation reference for the `Connection` object.
  */
 
-#ifndef _CONNECTION_H
-#define _CONNECTION_H
+#ifndef _CFNETWORKCONNECTION_H
+#define _CFNETWORKCONNECTION_H
 
 #include <string>         // for string
 #include "CFNetwork.hpp"  // for ConnectionFlow, SocketFamily

@@ -6,8 +6,8 @@
  * Implementation reference for the `Socket` object.
  */
 
-#ifndef _SOCKET_H
-#define _SOCKET_H
+#ifndef _CFNETWORKSOCKET_H
+#define _CFNETWORKSOCKET_H
 
 #include <memory>         // for shared_ptr
 #include <string>         // for string
