@@ -156,10 +156,10 @@ FILE_PATTERNS          = *.c \
                          *.qsf \
                          *.as \
                          *.js
-RECURSIVE              = NO
+RECURSIVE              = YES
 EXCLUDE                = main.cpp
 EXCLUDE_SYMLINKS       = NO
-EXCLUDE_PATTERNS       = 
+EXCLUDE_PATTERNS       = */ext/*
 EXCLUDE_SYMBOLS        = 
 EXAMPLE_PATH           = 
 EXAMPLE_PATTERNS       = *
