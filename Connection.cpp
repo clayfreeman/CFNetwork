@@ -17,6 +17,18 @@
 #include "CFNetwork.hpp"   // for InvalidArgument, parseAddress, SocketFamily
 #include "Connection.hpp"  // for Connection
 
+// Define macros to help select the appropriate address family for things like
+// `inet_ntop()` and assigning a port to a `sockaddr` struct
+#define addr_(i) reinterpret_cast<struct sockaddr*>(&i)
+#define addr4(i) reinterpret_cast<void*>(\
+  &reinterpret_cast<struct sockaddr_in *>(&i)->sin_addr)
+#define addr6(i) reinterpret_cast<void*>(\
+  &reinterpret_cast<struct sockaddr_in6*>(&i)->sin6_addr)
+#define port4(i) reinterpret_cast<uint16_t*>(\
+  &reinterpret_cast<struct sockaddr_in *>(&i)->sin_port)
+#define port6(i) reinterpret_cast<uint16_t*>(\
+  &reinterpret_cast<struct sockaddr_in6*>(&i)->sin6_port)
+
 namespace CFNetwork {
   /**
    * `Connection` Constructor (outbound).
@@ -34,31 +46,21 @@ namespace CFNetwork {
       throw InvalidArgument{"The provided port number is out of range."};
     // Fetch a finalized sockaddr_storage for the given address
     struct sockaddr_storage address  = parseAddress(addr);
-    // Create pointers to each expected variety of address family
-    struct sockaddr*        address_ =
-      reinterpret_cast<struct sockaddr    *>(&address);
-    struct sockaddr_in*     address4 =
-      reinterpret_cast<struct sockaddr_in *>(&address);
-    struct sockaddr_in6*    address6 =
-      reinterpret_cast<struct sockaddr_in6*>(&address);
     // Use the appropriate setup helper depending on the address family
-    if (address.ss_family == AF_INET) {
-      this->family = SocketFamily::IPv4;
-      // Store a text-based representation of the remote address
-      char addressString[INET_ADDRSTRLEN  + 1] = {};
-      this->remote = inet_ntop(address.ss_family, &address4->sin_addr,
-        addressString, INET_ADDRSTRLEN);
-      // Assign the port to the sockaddr struct
-      address4->sin_port = htons(this->port = port);
-    }
-    else if (address.ss_family == AF_INET6) {
-      this->family = SocketFamily::IPv6;
+    if (address.ss_family == AF_INET || address.ss_family == AF_INET6) {
+      // Assign the appropriate address family to describe the `Connection`
+      this->family = (address.ss_family == AF_INET ?
+        SocketFamily::IPv4 : SocketFamily::IPv6);
+      // Determine the appropriate pointer type for the remote address
+      auto addrPtr = (this->family == SocketFamily::IPv4 ?
+             addr4(address) : addr6(address));
       // Store a text-based representation of the remote address
       char addressString[INET6_ADDRSTRLEN + 1] = {};
-      this->remote = inet_ntop(address.ss_family, &address6->sin6_addr,
-        addressString, INET6_ADDRSTRLEN);
+      this->remote = inet_ntop(address.ss_family, addrPtr, addressString,
+        INET6_ADDRSTRLEN);
       // Assign the port to the sockaddr struct
-      address6->sin6_port = htons(this->port = port);
+      *(this->family == SocketFamily::IPv4 ? port4(address) : port6(address)) =
+        htons(this->port = port);
     }
     else {
       // Remote address has an unexpected address family
@@ -71,7 +73,8 @@ namespace CFNetwork {
       int reuse = 1;
       setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)); }
     // Attempt to connect the socket to the remote address
-    if (connect(this->socket, address_, this->family == SocketFamily::IPv4 ?
+    if (connect(this->socket, addr_(address),
+        this->family == SocketFamily::IPv4 ?
         sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)) < 0) {
       // A problem occurred, close the socket and throw an exception
       close(this->socket);
@@ -108,39 +111,26 @@ namespace CFNetwork {
     // Verify both addresses and assign them to their instance attributes
     struct sockaddr_storage laddress = parseAddress(laddr);
     struct sockaddr_storage raddress = parseAddress(raddr);
-    if (laddress.ss_family == AF_INET && raddress.ss_family == AF_INET) {
-      this->family = SocketFamily::IPv4;
-      // Create pointers to each expected variety of address family
-      struct sockaddr_in* laddress4 =
-        reinterpret_cast<struct sockaddr_in*>(&laddress);
-      struct sockaddr_in* raddress4 =
-        reinterpret_cast<struct sockaddr_in*>(&raddress);
+    // Determine if the listening and remote addresses are valid
+    if (laddress.ss_family == raddress.ss_family &&
+       (laddress.ss_family == AF_INET || laddress.ss_family == AF_INET6)) {
+      // Assign the appropriate address family to describe the `Connection`
+      this->family  = (laddress.ss_family == AF_INET ?
+        SocketFamily::IPv4 : SocketFamily::IPv6);
+      // Determine the appropriate pointer type for both addresses
+      auto laddrPtr = (this->family == SocketFamily::IPv4 ?
+             addr4(laddress) : addr6(laddress)),
+           raddrPtr = (this->family == SocketFamily::IPv4 ?
+             addr4(raddress) : addr6(raddress));
       // Fetch the canonicalized listen address
-      char addressString[INET_ADDRSTRLEN  + 1] = {};
-      this->listen = inet_ntop(laddress.ss_family, &laddress4->sin_addr,
-        addressString, INET_ADDRSTRLEN);
-      // Re-zero the addressString buffer for the remote address
-      memset(addressString, 0, INET_ADDRSTRLEN);
-      // Fetch the canonicalized remote address
-      this->remote = inet_ntop(raddress.ss_family, &raddress4->sin_addr,
-        addressString, INET_ADDRSTRLEN);
-    }
-    else if (laddress.ss_family == AF_INET6 && raddress.ss_family == AF_INET6) {
-      this->family = SocketFamily::IPv6;
-      // Create pointers to each expected variety of address family
-      struct sockaddr_in6* laddress6 =
-        reinterpret_cast<struct sockaddr_in6*>(&laddress);
-      struct sockaddr_in6* raddress6 =
-        reinterpret_cast<struct sockaddr_in6*>(&raddress);
-      // Fetch the canonicalized listen address
-      char addressString[INET6_ADDRSTRLEN  + 1] = {};
-      this->listen = inet_ntop(laddress.ss_family, &laddress6->sin6_addr,
-        addressString, INET6_ADDRSTRLEN);
+      char addressString[INET6_ADDRSTRLEN + 1] = {};
+      this->listen  = inet_ntop(laddress.ss_family, laddrPtr, addressString,
+        INET6_ADDRSTRLEN);
       // Re-zero the addressString buffer for the remote address
       memset(addressString, 0, INET6_ADDRSTRLEN);
       // Fetch the canonicalized remote address
-      this->remote = inet_ntop(raddress.ss_family, &raddress6->sin6_addr,
-        addressString, INET6_ADDRSTRLEN);
+      this->remote  = inet_ntop(raddress.ss_family, raddrPtr, addressString,
+        INET6_ADDRSTRLEN);
     }
     else {
       // Listen/remote addresses shouldn't have differing address families
