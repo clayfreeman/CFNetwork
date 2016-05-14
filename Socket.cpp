@@ -34,31 +34,21 @@ namespace CFNetwork {
       throw InvalidArgument{"The provided port number is out of range."};
     // Fetch a finalized sockaddr_storage for the given address
     struct sockaddr_storage address  = parseAddress(addr);
-    // Create pointers to each expected variety of address family
-    struct sockaddr*        address_ =
-      reinterpret_cast<struct sockaddr    *>(&address);
-    struct sockaddr_in*     address4 =
-      reinterpret_cast<struct sockaddr_in *>(&address);
-    struct sockaddr_in6*    address6 =
-      reinterpret_cast<struct sockaddr_in6*>(&address);
     // Use the appropriate setup helper depending on the address family
-    if (address.ss_family == AF_INET) {
-      this->family = SocketFamily::IPv4;
-      // Store a text-based representation of the listen address
-      char addressString[INET_ADDRSTRLEN  + 1] = {};
-      this->host = inet_ntop(address.ss_family, &address4->sin_addr,
-        addressString, INET_ADDRSTRLEN);
-      // Assign the port to the sockaddr struct
-      address4->sin_port = htons(this->port = port);
-    }
-    else if (address.ss_family == AF_INET6) {
-      this->family = SocketFamily::IPv6;
-      // Store a text-based representation of the listen address
+    if (address.ss_family == AF_INET || address.ss_family == AF_INET6) {
+      // Assign the appropriate address family to describe the `Connection`
+      this->family = (address.ss_family == AF_INET ?
+        SocketFamily::IPv4 : SocketFamily::IPv6);
+      // Determine the appropriate pointer type for the remote address
+      auto addrPtr = (address.ss_family == AF_INET ?
+        addr4(address) : addr6(address));
+      // Store a text-based representation of the remote address
       char addressString[INET6_ADDRSTRLEN + 1] = {};
-      this->host = inet_ntop(address.ss_family, &address6->sin6_addr,
-        addressString, INET6_ADDRSTRLEN);
+      this->host = inet_ntop(address.ss_family, addrPtr, addressString,
+        INET6_ADDRSTRLEN);
       // Assign the port to the sockaddr struct
-      address6->sin6_port = htons(this->port = port);
+      *(this->family == SocketFamily::IPv4 ? port4(address) : port6(address)) =
+        htons(this->port = port);
     }
     else {
       // Remote address has an unexpected address family
@@ -67,11 +57,8 @@ namespace CFNetwork {
     }
     // Setup the socket using the appropriate address family and type
     this->socket = ::socket(address.ss_family, SOCK_STREAM, 0);
-    { // Allow reusing the socket
-      int reuse = 1;
-      setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)); }
     // Attempt to bind the socket to the listening address
-    if (bind(this->socket, address_, this->family == SocketFamily::IPv4 ?
+    if (bind(this->socket, addr_(address), this->family == SocketFamily::IPv4 ?
         sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)) < 0) {
       // A problem occurred, close the socket and throw an exception
       close(this->socket);
@@ -79,6 +66,9 @@ namespace CFNetwork {
         std::to_string(this->port)};
     }
     else {
+      // Allow reusing the socket
+      int reuse = 1;
+      setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int));
       // Listen with a backlog of 16 clients
       listen(this->socket, 16);
     }
@@ -115,23 +105,14 @@ namespace CFNetwork {
       cli_fd = ::accept(this->socket, (struct sockaddr*)&cli_addr,
         &cli_addr_len);
       // Store a text-based representation of the remote address
-      if (cli_addr.ss_family == AF_INET) {
-        // Create a pointer to the appropriate type of structure
-        struct sockaddr_in* address =
-          reinterpret_cast<struct sockaddr_in *>(&cli_addr);
-        // Assign the resulting address to the raddress string
-        char addressString[INET_ADDRSTRLEN + 1] = {};
-        raddress = inet_ntop(cli_addr.ss_family, &address->sin_addr,
-          addressString, INET_ADDRSTRLEN);
-      }
-      else if (cli_addr.ss_family == AF_INET6) {
-        // Create a pointer to the appropriate type of structure
-        struct sockaddr_in6* address =
-          reinterpret_cast<struct sockaddr_in6*>(&cli_addr);
+      if (cli_addr.ss_family == AF_INET || cli_addr.ss_family == AF_INET6) {
+        // Determine the appropriate pointer type for the remote address
+        auto addrPtr = (cli_addr.ss_family == AF_INET ?
+          addr4(cli_addr) : addr6(cli_addr));
         // Assign the resulting address to the raddress string
         char addressString[INET6_ADDRSTRLEN + 1] = {};
-        raddress = inet_ntop(cli_addr.ss_family, &address->sin6_addr,
-          addressString, INET6_ADDRSTRLEN);
+        raddress = inet_ntop(cli_addr.ss_family, addrPtr, addressString,
+          INET6_ADDRSTRLEN);
       }
       // If cli_fd is negative, an error occurred
       if (cli_fd < 0) {

@@ -13,6 +13,18 @@
 #include <string>        // for string
 #include <sys/socket.h>  // for AF_INET, AF_INET6, SOCK_DGRAM, SOCK_STREAM, ...
 
+// Define macros to help select the appropriate address family for things like
+// `inet_ntop()` and assigning a port to a `sockaddr` struct
+#define addr_(i) reinterpret_cast<struct sockaddr*>(&i)
+#define addr4(i) reinterpret_cast<void*>(\
+  &reinterpret_cast<struct sockaddr_in *>(&i)->sin_addr)
+#define addr6(i) reinterpret_cast<void*>(\
+  &reinterpret_cast<struct sockaddr_in6*>(&i)->sin6_addr)
+#define port4(i) reinterpret_cast<uint16_t*>(\
+  &reinterpret_cast<struct sockaddr_in *>(&i)->sin_port)
+#define port6(i) reinterpret_cast<uint16_t*>(\
+  &reinterpret_cast<struct sockaddr_in6*>(&i)->sin6_port)
+
 /**
  * @namespace CFNetwork
  * `CFNetwork` is a collection of utilities that simplifies the process of
