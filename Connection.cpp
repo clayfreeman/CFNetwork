@@ -7,6 +7,7 @@
  */
 
 #include <arpa/inet.h>     // for inet_ntop
+#include <cassert>         // for assert
 #include <cstring>         // for memset
 #include <netinet/in.h>    // for INET_ADDRSTRLEN, INET6_ADDRSTRLEN, sockadd...
 #include <string>          // for allocator, basic_string, operator+, to_string
@@ -18,6 +19,10 @@
 #include "Connection.hpp"  // for Connection
 
 namespace CFNetwork {
+  #ifndef DOXYGEN_SHOULD_SKIP_THIS
+  const auto& read_fn = ::read;
+  #endif
+
   /**
    * `Connection` Constructor (outbound).
    *
@@ -136,6 +141,97 @@ namespace CFNetwork {
   }
 
   /**
+   * Enqueue data from the internal file descriptor to the internal buffer.
+   *
+   * Performs a blocking read on the internal file descriptor and enqueues the
+   * resulting data to the internal buffer. Requests to enqueue data can either
+   * be reliable or unreliable as described below:
+   *
+   * Reliable requests use one or more calls to `read(2)` to accomplish the goal
+   * of enqueuing exactly `request_length` bytes to the internal buffer. The
+   * return value of this type of request is predictable and should match
+   * `request_length`.
+   *
+   * Unreliable requests use only one call to `read(2)` using the smallest value
+   * between `MAX_BYTES` and `request_length`. The return value of this type of
+   * request is not predictable and is more likely to differ from
+   * `request_length` than a reliable request (even under normal circumstances).
+   *
+   * Reliable requests provide the advantage that, if possible, the requested
+   * number of bytes will be enqueued before returning to the original caller.
+   * However, the downside to reliable requests is that there is an indefinite
+   * waiting period for data if there is less data available than requested.
+   *
+   * Unreliable requests ensure that there will be no waiting period if there is
+   * data available to read. However, the amount of data that is enqueued is not
+   * predictable.
+   *
+   * Each type of request can fail if the connection is reset by the remote peer
+   * and an exception will be thrown.
+   *
+   * @throws `InvalidArgument` if the `Connection` is invalid or the requested
+   *                           length is invalid.
+   * @throws `UnexpectedError` if the `Connection` was reset by peer.
+   *
+   * @param  reliable       Whether or not the request should be reliable (true)
+   *                        or unreliable (false)
+   * @param  request_length The total number of bytes to enqueue to the internal
+   *                        buffer
+   *
+   * @return                The number of bytes that were enqueued to the
+   *                        internal buffer.
+   */
+  size_t Connection::enqueueData(bool reliable, size_t request_length) {
+    assert(MAX_BYTES > 0);
+    // Check if the requested length is valid
+    if (request_length == 0)
+      throw InvalidArgument{"The requested length is invalid."};
+    // If a request was made for a reliable read then use the provided
+    // `request_length` as the `read_length` target. Otherwise use the minimum
+    // value between `request_length` and `MAX_BYTES`
+     size_t read_length = request_length = (reliable ? request_length :
+       (request_length < MAX_BYTES ? request_length : MAX_BYTES));
+    ssize_t return_val  = 0;
+    // Check if the file descriptor is valid
+    if (!this->valid())
+      throw InvalidArgument{"The socket file descriptor is invalid."};
+    // Only attempt to enqueue data if a request for more than 0 bytes was made
+    if (read_length > 0) do {
+      // Prepare a zero-filled buffer to temporarily store the incoming data
+      // from the upcoming call to `read(2)`
+      unsigned char buffer[MAX_BYTES] = {};
+      // Read up to `MAX_BYTES` or `read_length` bytes (whichever is smallest)
+      // from the file descriptor
+      return_val = read_fn(this->socket, buffer, read_length <= MAX_BYTES ?
+        read_length : MAX_BYTES);
+      // If the `read(2)` system call was successful (>= 0) then process the
+      // data that was temporarily stored in the buffer
+      if (return_val >= 0) {
+        // Cast the return value to an unsigned `size_t` type to measure the
+        // amount of data that was read
+        size_t data_read = static_cast<size_t>(return_val);
+        // Append the data that was read to the internal buffer using the return
+        // value of the `read(2)` system call as the data size
+        this->buffer    += std::string{reinterpret_cast<const char*>(buffer),
+                                       data_read};
+        // Adjust the appropriate counters using the return value of this
+        // iteration's call to `read(2)`
+        read_length     -= data_read;
+      } else {
+        // Close the internal file descriptor
+        close(this->socket);
+        // Throw an exception explaining the error
+        throw UnexpectedError{"Connection reset by peer " + this->remote +
+          ":" + std::to_string(this->port)};
+      }
+    // Continue looping if trying to read in a reliable fashion and there is
+    // still data to read
+    } while (reliable && return_val >= 0 && read_length > 0);
+    // Return the total length of data that was enqueued to the internal buffer
+    return request_length - read_length;
+  }
+
+  /**
    * Fetches the file descriptor of the `Connection` instance.
    *
    * The internal file descriptor can be used to perform more advanced actions
@@ -210,42 +306,83 @@ namespace CFNetwork {
   }
 
   /**
-   * Attempts to read data from the internal file descriptor.
+   * Attempts to read data from the internal buffer & file descriptor.
    *
-   * Performs a blocking read on the internal file descriptor up to
-   * `MAX_BYTES - 1`. If there were zero bytes read then the `Connection` will
-   * be invalidated due to being reset by the remote peer.
+   * Requests to read data will check the internal buffer to determine if a
+   * sufficient amount of data is available to satisfy the request. If not, an
+   * attempt is made to enqueue more data by reading from the file descriptor.
    *
-   * @throws `InvalidArgument` if the `Connection` is invalid.
-   * @throws `UnexpectedError` if the `Connection` was reset by peer.
+   * Requests to read data can either be reliable or unreliable as described by
+   * the `enqueueData()` method of this class.
    *
-   * @return `std::string` containing the data that was read.
+   * Exceptions can occur from the `enqueueData()` method that will not be
+   * caught by this method.
+   *
+   * @see    `enqueueData()` for more information regarding reliable/unreliable
+   *                         requests and potential exceptions.
+   *
+   * @param  reliable       Whether or not the request should be reliable (true)
+   *                        or unreliable (false)
+   * @param  request_length The total number of bytes to read
+   *
+   * @return                The resulting `std::string` of the requested data.
    */
-  std::string Connection::read() const {
-    // Prepare storage for the return value
-    std::string data;
-    // Make sure the socket is valid (open)
-    if (this->valid()) {
-      // Prepare a buffer for the incoming data
-      char buffer[MAX_BYTES] = {};
-      // Read up to (MAX_BYTES - 1) bytes from the file descriptor to ensure a
-      // null character at the end to prevent overflow
-      ssize_t count = ::read(this->socket, buffer, MAX_BYTES - 1);
-      // Copy the C-String into a std::string
-      data = buffer;
-      // If there was 0 bytes of data to read ...
-      if (count < 1) {
-        // this->socket marked readable, but no data was read; connection closed
-        close(this->socket);
-        throw UnexpectedError{"Connection reset by peer " + this->remote +
-          ":" + std::to_string(this->port)};
-      }
+  std::string Connection::read(bool reliable, size_t request_length) {
+    assert(MAX_BYTES > 0);
+    // Keep track of the length of the internal buffer
+    size_t buf_length = this->buffer.length();
+    // Determine if some data needs to be enqueued
+    if (buf_length < request_length) {
+      // Enqueue the necessary amount of data (if there is not enough data
+      // available to satisfy the request)
+      size_t remaining_length = reliable ?
+        request_length - buf_length : MAX_BYTES;
+      // Attempt to enqueue the remaining amount of data
+      if (remaining_length > 0) this->enqueueData(reliable, remaining_length);
+      // Update the value of the buffer length
+      buf_length = this->buffer.length();
     }
-    else {
-      // Throw an exception regarding the invalidity of the socket
-      throw InvalidArgument{"The socket file descriptor is invalid."};
-    }
-    // Return a copy of the data that was read
+    // Calculate the maximum bound of the buffer
+    size_t str_length = request_length < buf_length ?
+      request_length : buf_length;
+    // Generate the resulting return value for this read
+    std::string data = this->buffer.substr(0, str_length);
+    // Adjust the internal buffer to remove the requested data
+    this->buffer.erase(0, str_length);
+    return data;
+  }
+
+  /**
+   * Attempts to read a string up to the specified delimiter.
+   *
+   * Requests to read up to a delimiter will result in a search of the internal
+   * buffer to find the specified delimiter. If the delimiter is not found then
+   * `enqueueData()` will be called until the delimiter can be found.
+   *
+   * Once the specified delimiter is found all data up to (and including) the
+   * delimiter will be extracted from the buffer and returned to the caller.
+   *
+   * Exceptions can occur from the `enqueueData()` method that will not be
+   * caught by this method.
+   *
+   * @see    `enqueueData()` for more information regarding how data is enqueued
+   *                         to the internal buffer and potential exceptions.
+   *
+   * @return The resulting `std::string` of the requested data.
+   */
+  std::string Connection::readDelim(char delim) {
+    size_t offset = 0, location;
+    // Continue enqueuing data until the specified delimiter is found
+    while ((location = this->buffer.find(delim, offset)) == std::string::npos) {
+      // Calculate the offset for the next search
+      offset  = this->buffer.length();
+      // Attempt to enqueue more data for the next search
+      this->enqueueData();
+    } ++location;
+    // Copy the contents of the buffer up to the resulting location
+    std::string data = this->buffer.substr(0, location);
+    // Erase the extracted portion of the buffer
+    this->buffer.erase(0, location);
     return data;
   }
 
@@ -258,7 +395,7 @@ namespace CFNetwork {
    * provided argument is not an open file descriptor). If neither case is
    * satisfied, the file descriptor is considered valid.
    *
-   * @see    `fcntl()` for more information regarding this procedure's test.
+   * @see    `fcntl(2)` for more information regarding this procedure's test.
    *
    * @return `true` if the file descriptor is valid, `false` otherwise.
    */

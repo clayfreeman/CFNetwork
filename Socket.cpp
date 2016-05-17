@@ -187,7 +187,7 @@ namespace CFNetwork {
    * provided argument is not an open file descriptor). If neither case is
    * satisfied, the file descriptor is considered valid.
    *
-   * @see    `fcntl()` for more information regarding this procedure's test.
+   * @see    `fcntl(2)` for more information regarding this procedure's test.
    *
    * @return `true` if the file descriptor is valid, `false` otherwise.
    */

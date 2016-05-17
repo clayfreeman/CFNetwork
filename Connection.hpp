@@ -32,6 +32,12 @@ namespace CFNetwork {
 
     protected:
       /**
+       * @var buffer
+       * Used to hold intermediate data from the `read(2)` system call to allow
+       * for reading up to a specified delimiter.
+       */
+      std::string    buffer = "";
+      /**
        * @var family
        * Used to describe the socket family type of a `Connection`.
        */
@@ -68,13 +74,17 @@ namespace CFNetwork {
       Connection(const std::string& laddr, const std::string& raddr,
         int port, int socket);
      ~Connection();
+      size_t             enqueueData(bool reliable = false, size_t
+                           request_length = MAX_BYTES);
       int                getDescriptor()                const;
       SocketFamily       getFamily()                    const;
       ConnectionFlow     getFlow()                      const;
       const std::string& getListen()                    const;
       int                getPort()                      const;
       const std::string& getRemote()                    const;
-      std::string        read()                         const;
+      std::string        read(bool reliable = false, size_t
+                           request_length = MAX_BYTES);
+      std::string        readDelim(char delim = '\n');
       bool               valid()                        const;
       void write(std::string data, bool newline = true) const;
   };
